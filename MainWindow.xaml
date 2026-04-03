@@ -19,7 +19,7 @@
         </Border>
 
         <!-- Control Panel -->
-        <Grid Grid.Row="1" Background="#F0F0F0" Margin="10,0,10,10">
+        <Grid x:Name="ControlPanel" Grid.Row="1" Background="#F0F0F0" Margin="10,0,10,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -32,7 +32,7 @@
             <StackPanel Grid.Column="0" Margin="10">
                 <TextBlock Text="串口设备" FontWeight="Bold" Margin="0,0,0,5"/>
                 <ComboBox x:Name="SerialPortComboBox" Height="30" Margin="0,0,0,5"/>
-                <Button x:Name="ConnectButton" Content="连接" Height="30" Click="ConnectButton_Click"/>
+                <Button x:Name="ConnectButton" Content="连接" Height="30" Click="ConnectButton_Click" Focusable="False"/>
                 <TextBlock x:Name="SerialStatusText" Text="未连接" Margin="0,5,0,0" Foreground="Red"/>
             </StackPanel>
 
@@ -40,7 +40,7 @@
             <StackPanel Grid.Column="1" Margin="10">
                 <TextBlock Text="视频采集源" FontWeight="Bold" Margin="0,0,0,5"/>
                 <ComboBox x:Name="VideoSourceComboBox" Height="30" Margin="0,0,0,5"/>
-                <Button x:Name="VideoSourceButton" Content="切换采集源" Height="30" Click="VideoSourceButton_Click"/>
+                <Button x:Name="VideoSourceButton" Content="切换采集源" Height="30" Click="VideoSourceButton_Click" Focusable="False"/>
                 <TextBlock x:Name="VideoStatusText" Text="未连接" Margin="0,5,0,0" Foreground="Red"/>
             </StackPanel>
 
@@ -48,21 +48,21 @@
             <StackPanel Grid.Column="2" Margin="10">
                 <TextBlock Text="音频设备" FontWeight="Bold" Margin="0,0,0,5"/>
                 <ComboBox x:Name="AudioDeviceComboBox" Height="30" Margin="0,0,0,5"/>
-                <Button x:Name="AudioStartButton" Content="启动音频" Height="30" Click="AudioStartButton_Click"/>
+                <Button x:Name="AudioStartButton" Content="启动音频" Height="30" Click="AudioStartButton_Click" Focusable="False"/>
                 <TextBlock x:Name="AudioStatusText" Text="音频未启动" Margin="0,5,0,0" Foreground="Red"/>
             </StackPanel>
 
             <!-- Button Mapping Config -->
             <StackPanel Grid.Column="3" Margin="10">
                 <TextBlock Text="按键配置" FontWeight="Bold" Margin="0,0,0,5"/>
-                <Button x:Name="KeyMappingButton" Content="自定义按键映射" Height="30" Click="KeyMappingButton_Click" Margin="0,0,0,5"/>
-                <Button x:Name="ReloadConfigButton" Content="重新加载配置" Height="30" Click="ReloadConfigButton_Click"/>
+                <Button x:Name="KeyMappingButton" Content="自定义按键映射" Height="30" Click="KeyMappingButton_Click" Margin="0,0,0,5" Focusable="False"/>
+                <Button x:Name="ReloadConfigButton" Content="重新加载配置" Height="30" Click="ReloadConfigButton_Click" Focusable="False"/>
             </StackPanel>
 
             <!-- NS2 Wakeup -->
             <StackPanel Grid.Column="4" Margin="10">
                 <TextBlock Text="设备唤醒" FontWeight="Bold" Margin="0,0,0,5"/>
-                <Button x:Name="WakeupButton" Content="唤醒 NS2" Height="30" Click="WakeupButton_Click" Margin="0,0,0,5"/>
+                <Button x:Name="WakeupButton" Content="唤醒 NS2" Height="30" Click="WakeupButton_Click" Margin="0,0,0,5" Focusable="False"/>
                 <Grid>
                     <TextBox x:Name="WakeupCidrTextBox" Height="26" FontSize="11" Padding="4,3"/>
                     <TextBlock Text="例如：192.168.3.0/24" IsHitTestVisible="False"

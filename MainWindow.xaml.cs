@@ -23,6 +23,11 @@ namespace SwitchPad
         private readonly KeyMappingService _keyMappingService;
         private readonly ProtocolHelper _protocolHelper = new();
 
+        private bool _isFullscreen = false;
+        private double _prevLeft, _prevTop, _prevWidth, _prevHeight;
+        private WindowState _prevWindowState;
+        private DateTime _dialogClosedAt = DateTime.MinValue;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -191,6 +196,9 @@ namespace SwitchPad
             var mappingWindow = new KeyMappingWindow(_keyMappingService);
             mappingWindow.Owner = this;
             mappingWindow.ShowDialog();
+            _dialogClosedAt = DateTime.UtcNow;
+            Keyboard.ClearFocus();
+            this.Focus();
         }
 
         private void ReloadConfigButton_Click(object sender, RoutedEventArgs e)
@@ -199,8 +207,41 @@ namespace SwitchPad
             MessageBox.Show("配置已重新加载", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+        private void ToggleFullscreen()
+        {
+            if (_isFullscreen)
+            {
+                this.WindowStyle = WindowStyle.SingleBorderWindow;
+                this.WindowState = _prevWindowState;
+                this.Left = _prevLeft;
+                this.Top = _prevTop;
+                this.Width = _prevWidth;
+                this.Height = _prevHeight;
+                ControlPanel.Visibility = Visibility.Visible;
+                _isFullscreen = false;
+            }
+            else
+            {
+                _prevLeft = this.Left;
+                _prevTop = this.Top;
+                _prevWidth = this.Width;
+                _prevHeight = this.Height;
+                _prevWindowState = this.WindowState;
+                this.WindowStyle = WindowStyle.None;
+                this.WindowState = WindowState.Maximized;
+                ControlPanel.Visibility = Visibility.Collapsed;
+                _isFullscreen = true;
+            }
+        }
+
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                return;
+            }
+
             if (!_serialService.IsConnected) return;
 
             var switchButton = _keyMappingService.GetSwitchButton(e.Key);
@@ -213,6 +254,13 @@ namespace SwitchPad
 
         private void MainWindow_KeyUp(object sender, KeyEventArgs e)
         {
+            if (e.Key == Key.Enter)
+            {
+                ToggleFullscreen();
+                e.Handled = true;
+                return;
+            }
+
             if (!_serialService.IsConnected) return;
 
             var switchButton = _keyMappingService.GetSwitchButton(e.Key);
