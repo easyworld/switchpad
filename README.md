@@ -2,6 +2,12 @@
 
 基于 C# WPF 开发的 Nintendo Switch 2 远程控制桌面应用程序，通过采集卡获取游戏画面与音频，通过串口向兼容 EasyCon 协议的单片机下发按键指令。
 
+## 运行截图
+![switchpad_screenshot](https://github.com/user-attachments/assets/61e76a29-9842-4cd5-b63a-52bf9a2ab188)
+
+## 架构图
+![switchpad_arch](https://github.com/user-attachments/assets/af224498-2f5d-4d18-b75f-52fba9343ec3)
+
 ## 功能特性
 
 ### 视频采集与显示
