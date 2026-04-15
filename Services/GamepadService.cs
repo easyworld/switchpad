@@ -79,10 +79,10 @@ namespace SwitchPad.Services
             { XButtons.RightShoulder, SwitchButton.R         },  // RB → R
             { XButtons.Guide,         SwitchButton.Home      },  // Xbox按钮 → Home
             { XButtons.Share,         SwitchButton.Capture   },  // 共享键 → Capture
-            { XButtons.A,             SwitchButton.A         },
-            { XButtons.B,             SwitchButton.B         },
-            { XButtons.X,             SwitchButton.X         },
-            { XButtons.Y,             SwitchButton.Y         },
+            { XButtons.A,             SwitchButton.B         },  // Xbox A → NS2 B
+            { XButtons.B,             SwitchButton.A         },  // Xbox B → NS2 A
+            { XButtons.X,             SwitchButton.Y         },  // Xbox X → NS2 Y
+            { XButtons.Y,             SwitchButton.X         },  // Xbox Y → NS2 X
         };
 
         private CancellationTokenSource? _cts;
