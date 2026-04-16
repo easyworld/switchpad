@@ -93,7 +93,35 @@ dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=
 3. 保存后立即生效
 
 ### 5. 开始游戏
-配置完成后直接使用键盘控制 NS2，所有配置自动保存。
+配置完成后直接使用键盘或 Xbox 手柄控制 NS2，所有配置自动保存。
+
+## Xbox 手柄支持
+
+程序通过 XInput 自动识别已连接的 Xbox 手柄（无需额外配置），手柄输入与键盘输入并行工作。串口连接成功后即可直接使用。
+
+### 按键映射
+
+| Xbox 手柄 | NS2 按键 | 说明 |
+|-----------|----------|------|
+| A | B | 布局交换 |
+| B | A | 布局交换 |
+| X | Y | 布局交换 |
+| Y | X | 布局交换 |
+| LB | L | |
+| RB | R | |
+| LT | ZL | 超过约 12% 行程触发 |
+| RT | ZR | 超过约 12% 行程触发 |
+| L3（左摇杆按下） | LStick | |
+| R3（右摇杆按下） | RStick | |
+| 左摇杆 | 左摇杆方向（8向） | 超过约 24% 偏移触发 |
+| 右摇杆 | 右摇杆方向（8向） | 超过约 24% 偏移触发 |
+| 十字键 | 十字键 | |
+| View（视角键） | −（Minus） | |
+| Menu（菜单键） | +（Plus） | |
+| Xbox（Guide 键） | Home | |
+| 共享（Share 键） | Capture | |
+
+> **注意**：读取 Xbox 按钮和共享键需要调用 `xinput1_4.dll` 的扩展接口（序号 100），仅 Windows 8 及以上系统支持。
 
 ## 配置文件
 
@@ -151,6 +179,7 @@ SwitchPad/
 │   ├── SerialService.cs      # 串口通讯服务（EasyCon 握手 + 读取循环）
 │   ├── ConfigService.cs      # 配置读写服务
 │   ├── KeyMappingService.cs  # 按键映射管理
+│   ├── GamepadService.cs     # Xbox 手柄输入服务（XInput）
 │   └── ProtocolHelper.cs     # EasyCon 报文编码（7位打包）
 ├── Windows/
 │   └── KeyMappingWindow.xaml # 按键配置窗口
@@ -199,6 +228,9 @@ SwitchPad/
 
 **Q: 按键无响应？**
 确保串口已成功连接（状态显示绿色），检查按键映射配置是否正确，确认窗口处于焦点状态。
+
+**Q: Xbox 手柄无响应？**
+确认手柄已通过 USB 或无线适配器连接，串口已成功连接。手柄输入不依赖窗口焦点，但需要串口处于连接状态。若 Xbox 按钮和共享键无响应，请确认系统版本为 Windows 8 及以上。
 
 **Q: 输入法拦截按键？**
 程序启动时会自动关闭 IME 转换，如仍有问题请手动切换到英文输入法。

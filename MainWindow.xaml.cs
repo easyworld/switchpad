@@ -21,6 +21,7 @@ namespace SwitchPad
         private readonly SerialService _serialService;
         private readonly ConfigService _configService;
         private readonly KeyMappingService _keyMappingService;
+        private readonly GamepadService _gamepadService;
         private readonly ProtocolHelper _protocolHelper = new();
 
         private bool _isFullscreen = false;
@@ -37,11 +38,13 @@ namespace SwitchPad
             _audioService = new AudioService();
             _serialService = new SerialService();
             _keyMappingService = new KeyMappingService(_configService);
+            _gamepadService = new GamepadService();
 
             _videoService.FrameReceived += OnFrameReceived;
             _videoService.StatusChanged += OnVideoStatusChanged;
             _audioService.StatusChanged += OnAudioStatusChanged;
             _serialService.StatusChanged += OnSerialStatusChanged;
+            _gamepadService.ButtonStateChanged += OnGamepadButtonStateChanged;
 
             this.KeyDown += MainWindow_KeyDown;
             this.KeyUp += MainWindow_KeyUp;
@@ -55,6 +58,7 @@ namespace SwitchPad
             RefreshSerialPorts();
             RefreshVideoSources();
             RefreshAudioDevices();
+            _gamepadService.Start();
         }
 
         private void LoadConfiguration()
@@ -271,6 +275,17 @@ namespace SwitchPad
             }
         }
 
+        private void OnGamepadButtonStateChanged(object? sender, (SwitchButton button, bool pressed) e)
+        {
+            // 调度到 UI 线程，与键盘处理共用同一 ProtocolHelper 实例时保证线程安全
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (!_serialService.IsConnected) return;
+                var command = _protocolHelper.CreateButtonCommand(e.button, e.pressed);
+                _serialService.SendCommand(command);
+            });
+        }
+
         private void OnFrameReceived(object? sender, BitmapSource bitmap)
         {
             Dispatcher.Invoke(() =>
@@ -311,6 +326,7 @@ namespace SwitchPad
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            _gamepadService.Dispose();
             _videoService.StopCapture();
             _audioService.StopCapture();
             _serialService.Disconnect();
