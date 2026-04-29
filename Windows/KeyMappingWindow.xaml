@@ -6,347 +6,302 @@
         ResizeMode="NoResize"
         Background="#F5F5F5">
     <Window.Resources>
-        <!-- Button Style -->
-        <Style x:Key="ControllerButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#2C2C2C"/>
+
+        <!-- Circle overlay button style -->
+        <Style x:Key="CircleButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#B0202020"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#444"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderBrush" Value="#80FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="20">
+                        <Grid>
+                            <Ellipse Fill="{TemplateBinding Background}"
+                                     Stroke="{TemplateBinding BorderBrush}"
+                                     StrokeThickness="1.2"/>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="#FFFFFFFF"/>
+                                <Setter Property="BorderThickness" Value="1.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#3C3C3C"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
 
-        <!-- Key Display Style -->
-        <Style x:Key="KeyDisplayStyle" TargetType="TextBlock">
-            <Setter Property="Background" Value="#E0E0E0"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
+        <!-- Pill overlay button style (L / ZL / R / ZR) -->
+        <Style x:Key="PillButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#B0202020"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#80FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1.2"
+                                    CornerRadius="10"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="#FFFFFFFF"/>
+                                <Setter Property="BorderThickness" Value="1.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
+
     </Window.Resources>
 
-    <Grid Margin="20">
+    <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Title -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="Nintendo Switch Pro Controller" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
-            <TextBlock Text="点击手柄按键进行键盘映射配置" FontSize="14" Foreground="#666" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="Nintendo Switch Pro Controller" FontSize="22" FontWeight="Bold"
+                       Foreground="#1A1A1A" HorizontalAlignment="Center"/>
+            <TextBlock Text="点击手柄按键进行键盘映射配置" FontSize="13" Foreground="#666666"
+                       HorizontalAlignment="Center" Margin="0,4,0,0"/>
         </StackPanel>
 
-        <!-- Controller Layout -->
-        <Canvas Grid.Row="1" Width="1000" Height="500" HorizontalAlignment="Center">
-            <!-- Controller Body -->
-            <Border Canvas.Left="100" Canvas.Top="50" Width="800" Height="400"
-                    Background="#3A3A3A" CornerRadius="80" BorderBrush="#222" BorderThickness="3">
-                <Border.Effect>
-                    <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="5" Opacity="0.5"/>
-                </Border.Effect>
-            </Border>
+        <!-- Controller area: SVG + button overlay, scaled uniformly to fill available space -->
+        <Viewbox Grid.Row="1" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <!-- Fixed 381×265 coordinate space matching SVG viewBox (mm × 10) -->
+            <Grid Width="381" Height="265">
 
-            <!-- Left Grip -->
-            <Ellipse Canvas.Left="120" Canvas.Top="150" Width="120" Height="120" Fill="#2C2C2C" Stroke="#444" StrokeThickness="2"/>
+                <!-- SVG background -->
+                <Border Width="381" Height="265">
+                    <Image x:Name="ImageController"
+                           Width="381" Height="265"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           IsHitTestVisible="False"/>
+                </Border>
 
-            <!-- Right Grip -->
-            <Ellipse Canvas.Left="760" Canvas.Top="150" Width="120" Height="120" Fill="#2C2C2C" Stroke="#444" StrokeThickness="2"/>
+                <!-- Button overlay canvas -->
+                <Canvas Width="381" Height="265">
 
-            <!-- Left Stick (L3 button center aligned with left circle center) -->
-            <!-- Left circle center: 120 + 60 = 180, Top: 150 + 60 = 210 -->
-            <!-- Grid is 120x120, so center at 60,60. Position grid so its center (60,60) aligns with circle center (180,210) -->
-            <!-- Canvas.Left = 180 - 60 = 120, Canvas.Top = 210 - 60 = 150 -->
-            <Grid Canvas.Left="120" Canvas.Top="150" Width="120" Height="120">
-                <TextBlock Text="左摇杆" FontSize="12" Foreground="White"
-                           HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-20,0,0"/>
-                <!-- Center Stick Button -->
-                <Button x:Name="BtnLStick" Width="50" Height="50" Content="L3" FontSize="14"
-                        Style="{StaticResource ControllerButtonStyle}"
-                        Click="ButtonMapping_Click" Tag="LStick"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <!-- ============ SHOULDER BUTTONS ============ -->
+                    <!-- L  (cx=75, cy=14) -->
+                    <Button x:Name="BtnL" Style="{StaticResource PillButtonStyle}"
+                            Width="55" Height="22"
+                            Canvas.Left="47.5" Canvas.Top="3"
+                            Content="L" FontSize="11" FontWeight="Bold"
+                            Click="ButtonMapping_Click" Tag="L"/>
+                    <!-- ZL (cx=38, cy=50) -->
+                    <Button x:Name="BtnZL" Style="{StaticResource PillButtonStyle}"
+                            Width="44" Height="22"
+                            Canvas.Left="16" Canvas.Top="39"
+                            Content="ZL" FontSize="11" FontWeight="Bold"
+                            Click="ButtonMapping_Click" Tag="ZL"/>
+                    <!-- R  (cx=306, cy=14) -->
+                    <Button x:Name="BtnR" Style="{StaticResource PillButtonStyle}"
+                            Width="55" Height="22"
+                            Canvas.Left="278.5" Canvas.Top="3"
+                            Content="R" FontSize="11" FontWeight="Bold"
+                            Click="ButtonMapping_Click" Tag="R"/>
+                    <!-- ZR (cx=343, cy=50) -->
+                    <Button x:Name="BtnZR" Style="{StaticResource PillButtonStyle}"
+                            Width="44" Height="22"
+                            Canvas.Left="321" Canvas.Top="39"
+                            Content="ZR" FontSize="11" FontWeight="Bold"
+                            Click="ButtonMapping_Click" Tag="ZR"/>
 
-                <!-- Direction Buttons -->
-                <!-- Up -->
-                <Button x:Name="BtnLStickUp" Width="30" Height="30" Content="↑" FontSize="14"
-                        Style="{StaticResource ControllerButtonStyle}"
-                        Click="ButtonMapping_Click" Tag="LStickUp"
-                        HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,5,0,0"/>
-                <!-- Down -->
-                <Button x:Name="BtnLStickDown" Width="30" Height="30" Content="↓" FontSize="14"
-                        Style="{StaticResource ControllerButtonStyle}"
-                        Click="ButtonMapping_Click" Tag="LStickDown"
-                        HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,5"/>
-                <!-- Left -->
-                <Button x:Name="BtnLStickLeft" Width="30" Height="30" Content="←" FontSize="14"
-                        Style="{StaticResource ControllerButtonStyle}"
-                        Click="ButtonMapping_Click" Tag="LStickLeft"
-                        HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0"/>
-                <!-- Right -->
-                <Button x:Name="BtnLStickRight" Width="30" Height="30" Content="→" FontSize="14"
-                        Style="{StaticResource ControllerButtonStyle}"
-                        Click="ButtonMapping_Click" Tag="LStickRight"
-                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0"/>
-            </Grid>
+                    <!-- ============ LEFT STICK ============ -->
+                    <!-- LStickUp (cx=85.5, cy=50) -->
+                    <Button x:Name="BtnLStickUp" Style="{StaticResource CircleButtonStyle}"
+                            Width="28" Height="28"
+                            Canvas.Left="71.5" Canvas.Top="36"
+                            Content="↑" FontSize="13"
+                            Click="ButtonMapping_Click" Tag="LStickUp"/>
+                    <!-- LStickLeft (cx=55, cy=80) -->
+                    <Button x:Name="BtnLStickLeft" Style="{StaticResource CircleButtonStyle}"
+                            Width="28" Height="28"
+                            Canvas.Left="41" Canvas.Top="66"
+                            Content="←" FontSize="13"
+                            Click="ButtonMapping_Click" Tag="LStickLeft"/>
+                    <!-- L3 center (cx=85.5, cy=80) -->
+                    <Button x:Name="BtnLStick" Style="{StaticResource CircleButtonStyle}"
+                            Width="46" Height="46"
+                            Canvas.Left="62.5" Canvas.Top="57"
+                            Content="L3" FontSize="12" FontWeight="Bold"
+                            Click="ButtonMapping_Click" Tag="LStick"/>
+                    <!-- LStickRight (cx=116, cy=80) -->
+                    <Button x:Name="BtnLStickRight" Style="{StaticResource CircleButtonStyle}"
+                            Width="28" Height="28"
+                            Canvas.Left="102" Canvas.Top="66"
+                            Content="→" FontSize="13"
+                            Click="ButtonMapping_Click" Tag="LStickRight"/>
+                    <!-- LStickDown (cx=85.5, cy=110) -->
+                    <Button x:Name="BtnLStickDown" Style="{StaticResource CircleButtonStyle}"
+                            Width="28" Height="28"
+                            Canvas.Left="71.5" Canvas.Top="96"
+                            Content="↓" FontSize="13"
+                            Click="ButtonMapping_Click" Tag="LStickDown"/>
 
-            <!-- D-Pad (Left Side, below and right of left stick) -->
-            <StackPanel Canvas.Left="260" Canvas.Top="280">
-                <TextBlock Text="十字键" FontSize="12" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
-                <Grid Width="120" Height="120">
-                    <!-- Up -->
-                    <Button x:Name="BtnDpadUp" Width="35" Height="35" Content="↑"
-                            Style="{StaticResource ControllerButtonStyle}"
-                            HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,5,0,0"
+                    <!-- ============ D-PAD ============ -->
+                    <!-- DpadUp (cx=132, cy=103) -->
+                    <Button x:Name="BtnDpadUp" Style="{StaticResource CircleButtonStyle}"
+                            Width="30" Height="30"
+                            Canvas.Left="117" Canvas.Top="88"
+                            Content="↑" FontSize="14"
                             Click="ButtonMapping_Click" Tag="DpadUp"/>
-                    <!-- Down -->
-                    <Button x:Name="BtnDpadDown" Width="35" Height="35" Content="↓"
-                            Style="{StaticResource ControllerButtonStyle}"
-                            HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,5"
-                            Click="ButtonMapping_Click" Tag="DpadDown"/>
-                    <!-- Left -->
-                    <Button x:Name="BtnDpadLeft" Width="35" Height="35" Content="←"
-                            Style="{StaticResource ControllerButtonStyle}"
-                            HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0"
+                    <!-- DpadLeft (cx=101, cy=133) -->
+                    <Button x:Name="BtnDpadLeft" Style="{StaticResource CircleButtonStyle}"
+                            Width="30" Height="30"
+                            Canvas.Left="86" Canvas.Top="118"
+                            Content="←" FontSize="14"
                             Click="ButtonMapping_Click" Tag="DpadLeft"/>
-                    <!-- Right -->
-                    <Button x:Name="BtnDpadRight" Width="35" Height="35" Content="→"
-                            Style="{StaticResource ControllerButtonStyle}"
-                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0"
+                    <!-- DpadRight (cx=163, cy=133) -->
+                    <Button x:Name="BtnDpadRight" Style="{StaticResource CircleButtonStyle}"
+                            Width="30" Height="30"
+                            Canvas.Left="148" Canvas.Top="118"
+                            Content="→" FontSize="14"
                             Click="ButtonMapping_Click" Tag="DpadRight"/>
-                    <!-- Center Display -->
-                    <Border Width="35" Height="35" Background="#1A1A1A" CornerRadius="17.5"/>
-                </Grid>
-            </StackPanel>
+                    <!-- DpadDown (cx=132, cy=163) -->
+                    <Button x:Name="BtnDpadDown" Style="{StaticResource CircleButtonStyle}"
+                            Width="30" Height="30"
+                            Canvas.Left="117" Canvas.Top="148"
+                            Content="↓" FontSize="14"
+                            Click="ButtonMapping_Click" Tag="DpadDown"/>
 
-            <!-- Right Stick -->
-            <StackPanel Canvas.Left="620" Canvas.Top="280">
-                <TextBlock Text="右摇杆" FontSize="12" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
-                <Grid Width="140" Height="140">
-                    <!-- Center Stick Button -->
-                    <Button x:Name="BtnRStick" Width="50" Height="50" Content="R3" FontSize="14"
-                            Style="{StaticResource ControllerButtonStyle}"
-                            Click="ButtonMapping_Click" Tag="RStick"
-                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <!-- ============ CENTER BUTTONS ============ -->
+                    <!-- Minus (cx=143.5, cy=51.5) -->
+                    <Button x:Name="BtnMinus" Style="{StaticResource CircleButtonStyle}"
+                            Width="32" Height="32"
+                            Canvas.Left="127.5" Canvas.Top="35.5"
+                            Content="-" FontSize="16" FontWeight="Bold"
+                            Click="ButtonMapping_Click" Tag="Minus"/>
+                    <!-- Plus (cx=237.5, cy=51.5) -->
+                    <Button x:Name="BtnPlus" Style="{StaticResource CircleButtonStyle}"
+                            Width="32" Height="32"
+                            Canvas.Left="221.5" Canvas.Top="35.5"
+                            Content="+" FontSize="16" FontWeight="Bold"
+                            Click="ButtonMapping_Click" Tag="Plus"/>
+                    <!-- Capture (cx=161, cy=80) -->
+                    <Button x:Name="BtnCapture" Style="{StaticResource CircleButtonStyle}"
+                            Width="32" Height="32"
+                            Canvas.Left="145" Canvas.Top="64"
+                            Content="📷" FontSize="13"
+                            Click="ButtonMapping_Click" Tag="Capture"/>
+                    <!-- Home (cx=217.5, cy=80) -->
+                    <Button x:Name="BtnHome" Style="{StaticResource CircleButtonStyle}"
+                            Width="36" Height="36"
+                            Canvas.Left="199.5" Canvas.Top="62"
+                            Content="🏠" FontSize="14"
+                            Click="ButtonMapping_Click" Tag="Home"/>
 
-                    <!-- Direction Buttons -->
-                    <!-- Up -->
-                    <Button x:Name="BtnRStickUp" Width="30" Height="30" Content="↑" FontSize="14"
-                            Style="{StaticResource ControllerButtonStyle}"
-                            Click="ButtonMapping_Click" Tag="RStickUp"
-                            HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,5,0,0"/>
-                    <!-- Down -->
-                    <Button x:Name="BtnRStickDown" Width="30" Height="30" Content="↓" FontSize="14"
-                            Style="{StaticResource ControllerButtonStyle}"
-                            Click="ButtonMapping_Click" Tag="RStickDown"
-                            HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,5"/>
-                    <!-- Left -->
-                    <Button x:Name="BtnRStickLeft" Width="30" Height="30" Content="←" FontSize="14"
-                            Style="{StaticResource ControllerButtonStyle}"
-                            Click="ButtonMapping_Click" Tag="RStickLeft"
-                            HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0"/>
-                    <!-- Right -->
-                    <Button x:Name="BtnRStickRight" Width="30" Height="30" Content="→" FontSize="14"
-                            Style="{StaticResource ControllerButtonStyle}"
-                            Click="ButtonMapping_Click" Tag="RStickRight"
-                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                </Grid>
-            </StackPanel>
+                    <!-- ============ ABXY BUTTONS ============ -->
+                    <!-- X - top (cx=291, cy=54.5) blue -->
+                    <Button x:Name="BtnX" Style="{StaticResource CircleButtonStyle}"
+                            Background="#B01E6BC8" BorderBrush="#800066CC"
+                            Width="38" Height="38"
+                            Canvas.Left="272" Canvas.Top="35.5"
+                            Content="X" FontSize="15" FontWeight="Bold"
+                            Click="ButtonMapping_Click" Tag="X"/>
+                    <!-- Y - left (cx=261.4, cy=80.2) yellow -->
+                    <Button x:Name="BtnY" Style="{StaticResource CircleButtonStyle}"
+                            Background="#B0C8A000" BorderBrush="#80FFA500"
+                            Width="38" Height="38"
+                            Canvas.Left="242.4" Canvas.Top="61.2"
+                            Content="Y" FontSize="15" FontWeight="Bold"
+                            Foreground="#FFFF00"
+                            Click="ButtonMapping_Click" Tag="Y"/>
+                    <!-- A - right (cx=320.9, cy=80.2) green -->
+                    <Button x:Name="BtnA" Style="{StaticResource CircleButtonStyle}"
+                            Background="#B0228B22" BorderBrush="#8032CD32"
+                            Width="38" Height="38"
+                            Canvas.Left="301.9" Canvas.Top="61.2"
+                            Content="A" FontSize="15" FontWeight="Bold"
+                            Click="ButtonMapping_Click" Tag="A"/>
+                    <!-- B - bottom (cx=291.2, cy=106) red -->
+                    <Button x:Name="BtnB" Style="{StaticResource CircleButtonStyle}"
+                            Background="#B08B0000" BorderBrush="#80DC143C"
+                            Width="38" Height="38"
+                            Canvas.Left="272.2" Canvas.Top="87"
+                            Content="B" FontSize="15" FontWeight="Bold"
+                            Click="ButtonMapping_Click" Tag="B"/>
 
-            <!-- ABXY Buttons (Right Side, center aligned with right circle center) -->
-            <!-- Right circle center: 760 + 60 = 820, Top: 150 + 60 = 210 -->
-            <!-- Grid is 140x140, so center at 70,70. Position grid so its center aligns with circle center (820,210) -->
-            <!-- Canvas.Left = 820 - 70 = 750, Canvas.Top = 210 - 70 = 140 -->
-            <Grid Canvas.Left="750" Canvas.Top="140" Width="140" Height="140">
-                <TextBlock Text="功能键" FontSize="12" Foreground="White"
-                           HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-20,0,0"/>
-                <!-- X (Top) -->
-                <Button x:Name="BtnX" Width="40" Height="40" Content="X" FontSize="18"
-                        Background="#1E90FF" Foreground="White" BorderBrush="#0066CC" BorderThickness="2"
-                        HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,0"
-                        Click="ButtonMapping_Click" Tag="X" Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="20">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-                <!-- B (Bottom) -->
-                <Button x:Name="BtnB" Width="40" Height="40" Content="B" FontSize="18"
-                        Background="#DC143C" Foreground="White" BorderBrush="#8B0000" BorderThickness="2"
-                        HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,10"
-                        Click="ButtonMapping_Click" Tag="B" Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="20">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-                <!-- Y (Left) -->
-                <Button x:Name="BtnY" Width="40" Height="40" Content="Y" FontSize="18"
-                        Background="#FFD700" Foreground="Black" BorderBrush="#FFA500" BorderThickness="2"
-                        HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0"
-                        Click="ButtonMapping_Click" Tag="Y" Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="20">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-                <!-- A (Right) -->
-                <Button x:Name="BtnA" Width="40" Height="40" Content="A" FontSize="18"
-                        Background="#32CD32" Foreground="White" BorderBrush="#228B22" BorderThickness="2"
-                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
-                        Click="ButtonMapping_Click" Tag="A" Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="20">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
+                    <!-- ============ RIGHT STICK ============ -->
+                    <!-- RStickUp (cx=240.5, cy=102) -->
+                    <Button x:Name="BtnRStickUp" Style="{StaticResource CircleButtonStyle}"
+                            Width="28" Height="28"
+                            Canvas.Left="226.5" Canvas.Top="88"
+                            Content="↑" FontSize="13"
+                            Click="ButtonMapping_Click" Tag="RStickUp"/>
+                    <!-- RStickLeft (cx=210, cy=132.7) -->
+                    <Button x:Name="BtnRStickLeft" Style="{StaticResource CircleButtonStyle}"
+                            Width="28" Height="28"
+                            Canvas.Left="196" Canvas.Top="118.7"
+                            Content="←" FontSize="13"
+                            Click="ButtonMapping_Click" Tag="RStickLeft"/>
+                    <!-- R3 center (cx=240.5, cy=132.7) -->
+                    <Button x:Name="BtnRStick" Style="{StaticResource CircleButtonStyle}"
+                            Width="46" Height="46"
+                            Canvas.Left="217.5" Canvas.Top="109.7"
+                            Content="R3" FontSize="12" FontWeight="Bold"
+                            Click="ButtonMapping_Click" Tag="RStick"/>
+                    <!-- RStickRight (cx=271, cy=132.7) -->
+                    <Button x:Name="BtnRStickRight" Style="{StaticResource CircleButtonStyle}"
+                            Width="28" Height="28"
+                            Canvas.Left="257" Canvas.Top="118.7"
+                            Content="→" FontSize="13"
+                            Click="ButtonMapping_Click" Tag="RStickRight"/>
+                    <!-- RStickDown (cx=240.5, cy=163) -->
+                    <Button x:Name="BtnRStickDown" Style="{StaticResource CircleButtonStyle}"
+                            Width="28" Height="28"
+                            Canvas.Left="226.5" Canvas.Top="149"
+                            Content="↓" FontSize="13"
+                            Click="ButtonMapping_Click" Tag="RStickDown"/>
+
+                </Canvas>
             </Grid>
+        </Viewbox>
 
-            <!-- Shoulder Buttons -->
-            <!-- L Button -->
-            <StackPanel Canvas.Left="180" Canvas.Top="20">
-                <Button x:Name="BtnL" Width="80" Height="35" Content="L" FontSize="16"
-                        Style="{StaticResource ControllerButtonStyle}"
-                        Click="ButtonMapping_Click" Tag="L"/>
+        <!-- Status panel -->
+        <Border Grid.Row="2" Margin="0,8,0,8" Padding="16,8"
+                Background="White" CornerRadius="8" BorderBrush="#DDDDDD" BorderThickness="1">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock x:Name="TxtMappingInfo" Text="点击任意按键开始配置"
+                           FontSize="14" FontWeight="Bold" Foreground="#1A1A1A"
+                           VerticalAlignment="Center"/>
+                <TextBlock x:Name="TxtCurrentKey" Text=""
+                           FontSize="13" Foreground="#666666"
+                           VerticalAlignment="Center" Margin="12,0,0,0"/>
             </StackPanel>
+        </Border>
 
-            <!-- ZL Button -->
-            <StackPanel Canvas.Left="180" Canvas.Top="60">
-                <Button x:Name="BtnZL" Width="80" Height="30" Content="ZL" FontSize="14"
-                        Style="{StaticResource ControllerButtonStyle}"
-                        Click="ButtonMapping_Click" Tag="ZL"/>
-            </StackPanel>
-
-            <!-- R Button -->
-            <StackPanel Canvas.Left="740" Canvas.Top="20">
-                <Button x:Name="BtnR" Width="80" Height="35" Content="R" FontSize="16"
-                        Style="{StaticResource ControllerButtonStyle}"
-                        Click="ButtonMapping_Click" Tag="R"/>
-            </StackPanel>
-
-            <!-- ZR Button -->
-            <StackPanel Canvas.Left="740" Canvas.Top="60">
-                <Button x:Name="BtnZR" Width="80" Height="30" Content="ZR" FontSize="14"
-                        Style="{StaticResource ControllerButtonStyle}"
-                        Click="ButtonMapping_Click" Tag="ZR"/>
-            </StackPanel>
-
-            <!-- Center Buttons -->
-            <!-- Minus Button -->
-            <StackPanel Canvas.Left="380" Canvas.Top="150">
-                <Button x:Name="BtnMinus" Width="50" Height="25" Content="-" FontSize="18"
-                        Style="{StaticResource ControllerButtonStyle}"
-                        Click="ButtonMapping_Click" Tag="Minus"/>
-            </StackPanel>
-
-            <!-- Plus Button -->
-            <StackPanel Canvas.Left="570" Canvas.Top="150">
-                <Button x:Name="BtnPlus" Width="50" Height="25" Content="+" FontSize="18"
-                        Style="{StaticResource ControllerButtonStyle}"
-                        Click="ButtonMapping_Click" Tag="Plus"/>
-            </StackPanel>
-
-            <!-- Home Button -->
-            <StackPanel Canvas.Left="560" Canvas.Top="200">
-                <Button x:Name="BtnHome" Width="50" Height="50" Content="🏠" FontSize="20"
-                        Background="#4A4A4A" BorderBrush="#666" BorderThickness="2"
-                        Click="ButtonMapping_Click" Tag="Home" Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="25">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-            </StackPanel>
-
-            <!-- Capture Button -->
-            <StackPanel Canvas.Left="390" Canvas.Top="200">
-                <Button x:Name="BtnCapture" Width="40" Height="40" Content="📷" FontSize="16"
-                        Background="#4A4A4A" BorderBrush="#666" BorderThickness="2"
-                        Click="ButtonMapping_Click" Tag="Capture" Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="5">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-            </StackPanel>
-
-            <!-- Key Mapping Display Panel -->
-            <Border Canvas.Left="350" Canvas.Top="380" Width="300" Height="60"
-                    Background="White" CornerRadius="8" BorderBrush="#CCC" BorderThickness="2">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="10,0">
-                    <TextBlock x:Name="TxtMappingInfo" Text="点击任意按键开始配置"
-                               FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,3"
-                               TextWrapping="Wrap"/>
-                    <TextBlock x:Name="TxtCurrentKey" Text=""
-                               FontSize="12" Foreground="#666" HorizontalAlignment="Center"
-                               TextWrapping="Wrap"/>
-                </StackPanel>
-            </Border>
-        </Canvas>
-
-        <!-- Bottom Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
-            <Button Content="重置为默认" Width="120" Height="40" Margin="0,0,10,0" Click="ResetButton_Click"
-                    Background="#FF6B6B" Foreground="White" BorderThickness="0" FontSize="14" Cursor="Hand"/>
-            <Button Content="保存配置" Width="120" Height="40" Margin="0,0,10,0" Click="SaveButton_Click"
-                    Background="#51CF66" Foreground="White" BorderThickness="0" FontSize="14" Cursor="Hand"/>
-            <Button Content="取消" Width="120" Height="40" Click="CancelButton_Click"
-                    Background="#868E96" Foreground="White" BorderThickness="0" FontSize="14" Cursor="Hand"/>
+        <!-- Bottom buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="重置为默认" Width="120" Height="38" Margin="0,0,10,0"
+                    Click="ResetButton_Click"
+                    Background="#C0392B" Foreground="White" BorderThickness="0"
+                    FontSize="14" Cursor="Hand"/>
+            <Button Content="保存配置" Width="120" Height="38" Margin="0,0,10,0"
+                    Click="SaveButton_Click"
+                    Background="#27AE60" Foreground="White" BorderThickness="0"
+                    FontSize="14" Cursor="Hand"/>
+            <Button Content="取消" Width="120" Height="38"
+                    Click="CancelButton_Click"
+                    Background="#555555" Foreground="White" BorderThickness="0"
+                    FontSize="14" Cursor="Hand"/>
         </StackPanel>
     </Grid>
 </Window>
