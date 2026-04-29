@@ -1,14 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using Svg;
 using SwitchPad.Models;
 using SwitchPad.Services;
 
@@ -35,44 +31,6 @@ namespace SwitchPad.Windows
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // Load SVG from embedded resource
-            var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "SwitchPad.Nintendo_Switch_Pro_Controller.svg";
-
-            try
-            {
-                using var stream = assembly.GetManifestResourceStream(resourceName);
-                if (stream != null)
-                {
-                    // Extract to temporary file
-                    var tempPath = Path.Combine(Path.GetTempPath(), "Nintendo_Switch_Pro_Controller.svg");
-                    using var fs = File.Create(tempPath);
-                    stream.CopyTo(fs);
-                    fs.Close();
-
-                    var svg = SvgDocument.Open(tempPath);
-                    var width = (int)(381 * 4);
-                    var height = (int)(265 * 4);
-                    var bitmap = svg.Draw(width, height);
-                    var image = BitmapExtensions.ConvertToBitmapSource(bitmap);
-                    ImageController.Source = image;
-
-                    // Clean up temp file
-                    try { File.Delete(tempPath); }
-                    catch { /* Ignore cleanup errors */ }
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"Embedded resource not found: {resourceName}");
-                    this.Title = $"Resource not found: {resourceName}";
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"SVG loading error: {ex.Message}");
-                this.Title = $"Error: {ex.Message}";
-            }
-
             _buttonControls[SwitchButton.DpadUp]    = BtnDpadUp;
             _buttonControls[SwitchButton.DpadDown]  = BtnDpadDown;
             _buttonControls[SwitchButton.DpadLeft]  = BtnDpadLeft;
@@ -330,32 +288,5 @@ namespace SwitchPad.Windows
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e) => this.Close();
-    }
-
-    /// <summary>Helper extension to convert System.Drawing.Bitmap to WPF BitmapSource.</summary>
-    public static class BitmapExtensions
-    {
-        public static BitmapSource ConvertToBitmapSource(System.Drawing.Bitmap bitmap)
-        {
-            var bitmapData = bitmap.LockBits(
-                new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height),
-                System.Drawing.Imaging.ImageLockMode.ReadOnly,
-                System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-            var bitmapSource = BitmapSource.Create(
-                bitmapData.Width,
-                bitmapData.Height,
-                bitmap.HorizontalResolution,
-                bitmap.VerticalResolution,
-                PixelFormats.Bgra32,
-                null,
-                bitmapData.Scan0,
-                bitmapData.Stride * bitmapData.Height,
-                bitmapData.Stride);
-
-            bitmap.UnlockBits(bitmapData);
-            bitmap.Dispose();
-            return bitmapSource;
-        }
     }
 }
