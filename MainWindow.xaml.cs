@@ -370,9 +370,9 @@ namespace SwitchPad
             {
                 WakeupStatusText.Text = $"已唤醒 {found.Count} 台设备";
                 WakeupStatusText.Foreground = System.Windows.Media.Brushes.Green;
-                var detail = string.Join("\n", found.Select(r => $"  {r.ip}  ({r.status})"));
-                MessageBox.Show($"找到 {found.Count} 台在线设备：\n{detail}", "唤醒完成",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                //var detail = string.Join("\n", found.Select(r => $"  {r.ip}  ({r.status})"));
+                //MessageBox.Show($"找到 {found.Count} 台在线设备：\n{detail}", "唤醒完成",
+                //    MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
