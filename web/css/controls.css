@@ -1,0 +1,44 @@
+#control-panel {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  padding: 8px;
+  margin: 0 8px 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
+}
+
+.panel-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.panel-column label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fullscreen-toggle {
+  position: absolute;
+  top: 8px; right: 8px;
+  z-index: 10;
+  width: 36px; height: 36px;
+  background: rgba(0,0,0,0.5);
+  border: none;
+  border-radius: var(--border-radius);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast);
+}
+
+.fullscreen-toggle:hover { background: rgba(0,0,0,0.8); }
+
+.fullscreen .fullscreen-toggle { top: 8px; right: 8px; }

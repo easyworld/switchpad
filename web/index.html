@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwitchPad - NS2 Remote Control</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/controls.css">
+  <link rel="stylesheet" href="css/keymapping.css">
+  <link rel="stylesheet" href="css/button-overlays.css">
+  <link rel="stylesheet" href="css/script-panel.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Video Display -->
+    <div id="video-container">
+      <video id="video-el" autoplay playsinline muted></video>
+      <div id="serial-hint">点击下方「连接串口」开始</div>
+      <button class="fullscreen-toggle" id="btn-fullscreen" title="全屏">&#x26F6;</button>
+    </div>
+
+    <!-- Script Panel (right side, spans full height when open) -->
+    <div class="script-panel hidden" id="script-panel">
+      <div class="script-header">
+        <h2>脚本引擎</h2>
+        <button class="script-close-btn" id="btn-script-close">&times;</button>
+      </div>
+      <div class="script-editor-area">
+        <textarea id="script-editor" spellcheck="false"
+          placeholder="# Enter your script here&#10;PRINT Hello World&#10;WAIT 1000&#10;A&#10;"></textarea>
+      </div>
+      <div class="script-toolbar">
+        <button class="btn" id="btn-script-load">加载文件</button>
+        <input type="file" id="script-file-input" accept=".txt,.ecs" style="display:none">
+        <button class="btn" id="btn-script-run" style="background:#27ae60">运行</button>
+        <button class="btn" id="btn-script-stop" style="background:#c0392b" disabled>停止</button>
+        <button class="btn" id="btn-script-clear">清空输出</button>
+      </div>
+      <div class="script-output-area">
+        <pre id="script-output"></pre>
+      </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div id="control-panel">
+      <!-- Serial Port -->
+      <div class="panel-column">
+        <label>串口设备</label>
+        <button class="btn" id="btn-serial-connect">连接串口</button>
+        <div class="status-text status-err" id="serial-status">未连接</div>
+      </div>
+
+      <!-- Video Source -->
+      <div class="panel-column">
+        <label>视频采集源</label>
+        <select id="sel-video-source"><option value="">-- 选择设备 --</option></select>
+        <button class="btn" id="btn-video-start">切换采集源</button>
+        <div class="status-text status-err" id="video-status">未连接</div>
+      </div>
+
+      <!-- Audio Device -->
+      <div class="panel-column">
+        <label>音频设备</label>
+        <select id="sel-audio-device"><option value="">-- 选择设备 --</option></select>
+        <button class="btn" id="btn-audio-start">启动音频</button>
+        <div class="status-text status-err" id="audio-status">未启动</div>
+      </div>
+
+      <!-- Key Mapping -->
+      <div class="panel-column">
+        <label>按键配置</label>
+        <button class="btn" id="btn-keymapping">自定义按键映射</button>
+        <button class="btn" id="btn-reload-config">重新加载配置</button>
+      </div>
+
+      <!-- NS2 Wakeup -->
+      <div class="panel-column">
+        <label>设备唤醒</label>
+        <input type="text" id="input-cidr" placeholder="例如：192.168.3.0/24">
+        <button class="btn" id="btn-wakeup">唤醒 NS2</button>
+        <div class="status-text" id="wakeup-status"></div>
+      </div>
+
+      <!-- Script Engine -->
+      <div class="panel-column">
+        <label>脚本</label>
+        <button class="btn" id="btn-script-panel">脚本编辑器</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Mapping Overlay -->
+  <div class="keymapping-overlay hidden" id="keymapping-overlay">
+    <div class="keymapping-dialog">
+      <div class="keymapping-title">
+        <h2>Nintendo Switch Pro Controller</h2>
+        <p>点击手柄按键进行键盘映射配置</p>
+      </div>
+      <div class="controller-container" id="controller-container">
+        <svg id="controller-svg" viewBox="0 0 381 265" xmlns="http://www.w3.org/2000/svg">
+        </svg>
+        <div id="button-overlays"></div>
+      </div>
+      <div class="keymapping-status">
+        <span class="info" id="km-info">点击任意按键开始配置</span>
+        <span class="detail" id="km-detail"></span>
+      </div>
+      <div class="keymapping-actions">
+        <button id="btn-km-reset" style="background:#c0392b">重置为默认</button>
+        <button id="btn-km-save" style="background:#27ae60">保存配置</button>
+        <button id="btn-km-cancel" style="background:#555">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/protocol.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/keymapping.js"></script>
+  <script src="js/serial.js"></script>
+  <script src="js/gamepad.js"></script>
+  <script src="js/video.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/wakeup.js"></script>
+  <script src="js/keymapping-ui.js"></script>
+  <script src="js/script-engine.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>

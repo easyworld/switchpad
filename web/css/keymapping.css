@@ -1,0 +1,93 @@
+.keymapping-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.keymapping-overlay.hidden { display: none; }
+
+.keymapping-dialog {
+  background: #f5f5f5;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  width: 90vw;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.keymapping-title {
+  text-align: center;
+}
+
+.keymapping-title h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.keymapping-title p {
+  font-size: 13px;
+  color: #666;
+}
+
+.controller-container {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  aspect-ratio: 381 / 265;
+}
+
+.controller-container svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.keymapping-status {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 16px;
+  text-align: center;
+}
+
+.keymapping-status .info {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.keymapping-status .detail {
+  font-size: 13px;
+  color: #666;
+  margin-left: 12px;
+}
+
+.keymapping-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.keymapping-actions button {
+  width: 120px;
+  height: 38px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  color: #fff;
+  transition: all var(--transition-fast);
+}

@@ -1,0 +1,371 @@
+window.UI = (() => {
+  const BTN = window.SwitchButton;
+
+  // DOM refs
+  const $ = id => document.getElementById(id);
+  const videoEl = $('video-el');
+  const serialHint = $('serial-hint');
+  const btnSerial = $('btn-serial-connect');
+  const serialStatus = $('serial-status');
+  const selVideo = $('sel-video-source');
+  const btnVideo = $('btn-video-start');
+  const videoStatus = $('video-status');
+  const selAudio = $('sel-audio-device');
+  const btnAudio = $('btn-audio-start');
+  const audioStatus = $('audio-status');
+  const btnKeymapping = $('btn-keymapping');
+  const btnReload = $('btn-reload-config');
+  const inputCidr = $('input-cidr');
+  const btnWakeup = $('btn-wakeup');
+  const wakeupStatus = $('wakeup-status');
+  const btnFullscreen = $('btn-fullscreen');
+  const btnScriptPanel = $('btn-script-panel');
+  const btnScriptClose = $('btn-script-close');
+  const btnScriptLoad = $('btn-script-load');
+  const btnScriptRun = $('btn-script-run');
+  const btnScriptStop = $('btn-script-stop');
+  const btnScriptClear = $('btn-script-clear');
+  const scriptFileInput = $('script-file-input');
+  const scriptEditor = $('script-editor');
+  const scriptOutput = $('script-output');
+
+  let _isFullscreen = false;
+  let _isKeymappingOpen = false;
+  let _isScriptPanelOpen = false;
+
+  function init() {
+    // Setup video element
+    window.VideoService.setVideoElement(videoEl);
+
+    // Status listeners
+    window.SerialService.onStatusChange(onSerialStatus);
+    window.VideoService.onStatusChange(onVideoStatus);
+    window.AudioService.onStatusChange(onAudioStatus);
+    window.GamepadService.onButtonStateChanged(onGamepadInput);
+
+    // Button events
+    btnSerial.addEventListener('click', onSerialClick);
+    btnVideo.addEventListener('click', onVideoClick);
+    btnAudio.addEventListener('click', onAudioClick);
+    btnKeymapping.addEventListener('click', onKeymappingClick);
+    btnReload.addEventListener('click', onReloadClick);
+    btnWakeup.addEventListener('click', onWakeupClick);
+    btnFullscreen.addEventListener('click', toggleFullscreen);
+    btnScriptPanel.addEventListener('click', openScriptPanel);
+    btnScriptClose.addEventListener('click', closeScriptPanel);
+    btnScriptLoad.addEventListener('click', () => scriptFileInput.click());
+    scriptFileInput.addEventListener('change', onScriptFileLoad);
+    btnScriptRun.addEventListener('click', onScriptRun);
+    btnScriptStop.addEventListener('click', onScriptStop);
+    btnScriptClear.addEventListener('click', () => { scriptOutput.textContent = ''; });
+
+    // Keyboard events
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+
+    // Cleanup
+    window.addEventListener('beforeunload', onBeforeUnload);
+
+    // Fullscreen change
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        _isFullscreen = false;
+        document.getElementById('app').classList.remove('fullscreen');
+      }
+    });
+
+    // Load config and populate
+    loadConfiguration();
+
+    // Start gamepad polling
+    window.GamepadService.start();
+
+    // Set keymapping open state callback
+    window.KeyMappingUI.onOpenChange(open => { _isKeymappingOpen = open; });
+  }
+
+  async function loadConfiguration() {
+    const config = window.ConfigService.loadConfig();
+    inputCidr.value = config.wakeupCidr || '';
+
+    // Enumerate devices once (triggers getUserMedia permission)
+    await refreshDevices();
+
+    // Auto-start video
+    if (config.videoSourceId) {
+      if ([...selVideo.options].some(o => o.value === config.videoSourceId)) {
+        selVideo.value = config.videoSourceId;
+        window.VideoService.startCapture(config.videoSourceId);
+      }
+    }
+
+    // Auto-start audio
+    if (config.audioDeviceId) {
+      if ([...selAudio.options].some(o => o.value === config.audioDeviceId)) {
+        selAudio.value = config.audioDeviceId;
+        window.AudioService.startCapture(config.audioDeviceId);
+      }
+    }
+  }
+
+  async function refreshDevices() {
+    const videos = await window.VideoService.getAvailableDevices();
+    selVideo.innerHTML = '<option value="">-- 选择设备 --</option>';
+    videos.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.deviceId;
+      opt.textContent = d.label;
+      selVideo.appendChild(opt);
+    });
+
+    const audios = await window.AudioService.getAvailableDevices();
+    selAudio.innerHTML = '<option value="">-- 选择设备 --</option>';
+    audios.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.deviceId;
+      opt.textContent = d.label;
+      selAudio.appendChild(opt);
+    });
+  }
+
+  // ── Status handlers ──
+
+  function onSerialStatus(status) {
+    serialStatus.textContent = status;
+    serialStatus.className = 'status-text ' + (status.includes('已连接') ? 'status-ok' : 'status-err');
+    btnSerial.textContent = status.includes('已连接') ? '断开串口' : '连接串口';
+    serialHint.style.display = status.includes('已连接') ? 'none' : '';
+  }
+
+  function onVideoStatus(status) {
+    videoStatus.textContent = status;
+    videoStatus.className = 'status-text ' + (status.includes('运行中') ? 'status-ok' : 'status-err');
+  }
+
+  function onAudioStatus(status) {
+    audioStatus.textContent = status;
+    audioStatus.className = 'status-text ' + (status.includes('运行中') ? 'status-ok' : 'status-err');
+  }
+
+  // ── Button handlers ──
+
+  async function onSerialClick() {
+    if (window.SerialService.isConnected) {
+      await window.SerialService.disconnect();
+    } else {
+      const config = window.ConfigService.loadConfig();
+      const ok = await window.SerialService.connect(config.baudRate);
+      if (ok) {
+        window.SerialService.sendCommand(window.ProtocolHelper.reset());
+        btnSerial.blur();
+      }
+    }
+  }
+
+  async function onVideoClick() {
+    const deviceId = selVideo.value;
+    if (!deviceId) return;
+    window.VideoService.stopCapture();
+    const ok = await window.VideoService.startCapture(deviceId);
+    if (ok) {
+      const config = window.ConfigService.loadConfig();
+      config.videoSourceId = deviceId;
+      window.ConfigService.saveConfig(config);
+    }
+  }
+
+  async function onAudioClick() {
+    const deviceId = selAudio.value;
+    if (!deviceId) return;
+    window.AudioService.stopCapture();
+    const ok = await window.AudioService.startCapture(deviceId);
+    if (ok) {
+      const config = window.ConfigService.loadConfig();
+      config.audioDeviceId = deviceId;
+      window.ConfigService.saveConfig(config);
+    }
+  }
+
+  function onKeymappingClick() {
+    window.KeyMappingUI.openDialog();
+  }
+
+  function onReloadClick() {
+    window.KeyMappingService.loadMappings();
+    loadConfiguration();
+  }
+
+  async function onWakeupClick() {
+    const cidr = inputCidr.value.trim();
+    if (!cidr) {
+      wakeupStatus.textContent = '请输入扫描范围';
+      wakeupStatus.className = 'status-text status-warn';
+      return;
+    }
+
+    let ips;
+    try {
+      ips = window.WakeupService.expandCidr(cidr);
+    } catch {
+      wakeupStatus.textContent = 'CIDR 格式无效';
+      wakeupStatus.className = 'status-text status-warn';
+      return;
+    }
+
+    const config = window.ConfigService.loadConfig();
+    config.wakeupCidr = cidr;
+    window.ConfigService.saveConfig(config);
+
+    btnWakeup.disabled = true;
+    btnWakeup.textContent = '扫描中...';
+    wakeupStatus.textContent = `正在扫描 ${cidr}...`;
+    wakeupStatus.className = 'status-text status-warn';
+
+    const found = await window.WakeupService.scanForNS2(ips);
+
+    if (found.length > 0) {
+      wakeupStatus.textContent = `已唤醒 ${found.length} 台设备`;
+      wakeupStatus.className = 'status-text status-ok';
+    } else {
+      wakeupStatus.textContent = '未发现在线设备';
+      wakeupStatus.className = 'status-text status-err';
+    }
+
+    btnWakeup.disabled = false;
+    btnWakeup.textContent = '唤醒 NS2';
+  }
+
+  // ── Keyboard input ──
+
+  function onKeyDown(e) {
+    if (_isKeymappingOpen) return;
+    if (_isScriptPanelOpen) return;
+    if (e.isComposing) return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+
+    if (e.code === 'Enter') {
+      e.preventDefault();
+      return;
+    }
+
+    if (!window.SerialService.isConnected) return;
+    if (e.repeat) return;
+
+    const btn = window.KeyMappingService.getSwitchButton(e.code);
+    if (btn !== BTN.None) {
+      e.preventDefault();
+      const cmd = window.ProtocolHelper.createButtonCommand(btn, true);
+      window.SerialService.sendCommand(cmd);
+    }
+  }
+
+  function onKeyUp(e) {
+    if (_isKeymappingOpen) return;
+    if (_isScriptPanelOpen) return;
+    if (e.isComposing) return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+
+    if (e.code === 'Enter') {
+      toggleFullscreen();
+      e.preventDefault();
+      return;
+    }
+
+    if (!window.SerialService.isConnected) return;
+
+    const btn = window.KeyMappingService.getSwitchButton(e.code);
+    if (btn !== BTN.None) {
+      e.preventDefault();
+      window.SerialService.sendCommand(window.ProtocolHelper.createButtonCommand(btn, false));
+    }
+  }
+
+  // ── Gamepad input ──
+
+  function onGamepadInput(button, pressed) {
+    if (!window.SerialService.isConnected) return;
+    window.SerialService.sendCommand(window.ProtocolHelper.createButtonCommand(button, pressed));
+  }
+
+  // ── Fullscreen ──
+
+  function toggleFullscreen() {
+    if (_isFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      document.documentElement.requestFullscreen().catch(() => {});
+      document.getElementById('app').classList.add('fullscreen');
+      _isFullscreen = true;
+    }
+  }
+
+  // ── Script panel ──
+
+  function openScriptPanel() {
+    document.getElementById('app').classList.add('script-open');
+    document.getElementById('script-panel').classList.remove('hidden');
+    _isScriptPanelOpen = true;
+  }
+
+  function closeScriptPanel() {
+    if (window.ScriptEngine.isRunning) window.ScriptEngine.stop();
+    document.getElementById('app').classList.remove('script-open');
+    document.getElementById('script-panel').classList.add('hidden');
+    _isScriptPanelOpen = false;
+    btnScriptRun.disabled = false;
+    btnScriptStop.disabled = true;
+  }
+
+  function onScriptFileLoad(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { scriptEditor.value = reader.result; };
+    reader.readAsText(file);
+    scriptFileInput.value = '';
+  }
+
+  async function onScriptRun() {
+    const source = scriptEditor.value.trim();
+    if (!source) return;
+
+    if (!window.SerialService.isConnected) {
+      scriptOutput.textContent = '[错误] 请先连接串口设备\n';
+      return;
+    }
+
+    btnScriptRun.disabled = true;
+    btnScriptStop.disabled = false;
+    scriptOutput.textContent = '';
+
+    try {
+      const ast = window.ScriptEngine.loadScript(source);
+      await window.ScriptEngine.run(ast, (text) => {
+        scriptOutput.textContent += text;
+        scriptOutput.scrollTop = scriptOutput.scrollHeight;
+      });
+    } catch (e) {
+      scriptOutput.textContent += '[错误] ' + e.message + '\n';
+    }
+
+    btnScriptRun.disabled = false;
+    btnScriptStop.disabled = true;
+  }
+
+  function onScriptStop() {
+    window.ScriptEngine.stop();
+  }
+
+  // ── Cleanup ──
+
+  async function onBeforeUnload() {
+    window.GamepadService.stop();
+    window.VideoService.stopCapture();
+    window.AudioService.stopCapture();
+    await window.SerialService.disconnect();
+  }
+
+  return { init };
+})();
+
+document.addEventListener('DOMContentLoaded', window.UI.init);
