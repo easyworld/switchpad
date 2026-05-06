@@ -224,8 +224,18 @@ window.ScriptEngine = (() => {
     }
 
     function parseBitwiseXor() {
-      let left = parseShift();
+      let left = parseBitwiseAnd();
       while (at('OPERATOR') && peek().value === '^') {
+        const op = advance().value;
+        const right = parseBitwiseAnd();
+        left = { type: 'BinaryOp', op, left, right };
+      }
+      return left;
+    }
+
+    function parseBitwiseAnd() {
+      let left = parseShift();
+      while (at('OPERATOR') && peek().value === '&') {
         const op = advance().value;
         const right = parseShift();
         left = { type: 'BinaryOp', op, left, right };
@@ -390,7 +400,7 @@ window.ScriptEngine = (() => {
       if (tok.type === 'STICK_NAME') return parseStick();
       if (tok.type === 'BUTTON_NAME') return parseButton();
       if (tok.type === 'NUMBER') return parseBareNumber();
-      if (tok.type === 'IDENTIFIER' && tok.value.startsWith('$')) return parseAssignment();
+      if (tok.type === 'IDENTIFIER' && (tok.value.startsWith('$') || tok.value.startsWith('_'))) return parseAssignment();
 
       // Skip unknown tokens
       if (at('NEWLINE')) { advance(); return parseStatement(); }
@@ -710,7 +720,11 @@ window.ScriptEngine = (() => {
 
   function setConstant(name, value) {
     const key = normalizeName(name);
-    _scopeStack[_scopeStack.length - 1].constants.set(key, value);
+    const scope = _scopeStack[_scopeStack.length - 1];
+    if (scope.constants.has(key)) {
+      throw new Error(`常量 ${name} 已定义，不能修改`);
+    }
+    scope.constants.set(key, value);
   }
 
   // ── Expression evaluation ──
@@ -930,6 +944,24 @@ window.ScriptEngine = (() => {
       if (count <= 0) return;
       for (let i = 0; i < count; i++) {
         if (stmt.variable) setVariable(stmt.variable, i);
+        try {
+          await execBlock(stmt.body);
+        } catch (e) {
+          if (e instanceof BreakException) {
+            if (e.level > 1) throw new BreakException(e.level - 1);
+            break;
+          }
+          if (e instanceof ContinueException) {
+            if (e.level > 1) throw new ContinueException(e.level - 1);
+            continue;
+          }
+          throw e;
+        }
+      }
+    } else {
+      // FOR (infinite loop)
+      while (true) {
+        checkAbort();
         try {
           await execBlock(stmt.body);
         } catch (e) {
