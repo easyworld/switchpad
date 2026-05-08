@@ -775,10 +775,19 @@ window.ScriptEngine = (() => {
 
   // ── Output helpers ──
 
+  function timeTag() {
+    const d = new Date();
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    const s = String(d.getSeconds()).padStart(2, '0');
+    const ms = String(d.getMilliseconds()).padStart(3, '0');
+    return `[${h}:${m}:${s}.${ms}]`;
+  }
+
   function output(text, newline) {
     if (!_outputCallback) return;
     if (newline === undefined) newline = true;
-    _outputCallback(newline ? text + '\n' : text);
+    _outputCallback(timeTag() + ' ' + (newline ? text + '\n' : text));
   }
 
   async function resolvePrintArgs(args) {
@@ -1054,6 +1063,8 @@ window.ScriptEngine = (() => {
         _functions[stmt.name.toUpperCase()] = stmt;
       }
     }
+
+    output('[脚本开始执行]');
 
     try {
       await execBlock(ast.body);
