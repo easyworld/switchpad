@@ -316,13 +316,80 @@ window.UI = (() => {
     btnScriptStop.disabled = true;
   }
 
-  function onScriptFileLoad(e) {
+  async function onScriptFileLoad(e) {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => { scriptEditor.value = reader.result; };
-    reader.readAsText(file);
+
+    if (file.name.toLowerCase().endsWith('.zip')) {
+      await loadZipProject(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => { scriptEditor.value = reader.result; };
+      reader.readAsText(file);
+    }
     scriptFileInput.value = '';
+  }
+
+  async function loadZipProject(file) {
+    if (typeof JSZip === 'undefined') {
+      scriptOutput.textContent += '[错误] JSZip 未加载，无法读取 ZIP\n';
+      return;
+    }
+
+    try {
+      const zip = await JSZip.loadAsync(file);
+
+      // Load main.ecs
+      const mainEcs = zip.file('main.ecs');
+      if (mainEcs) {
+        scriptEditor.value = await mainEcs.async('string');
+      }
+
+      // Load IL labels - clear existing first, then import
+      const imgLabelDir = zip.folder('ImgLabel');
+      let imported = 0, skipped = 0;
+      await window.ImgSearchDB.init();
+      await window.ImgSearchDB.clearAllLabels();
+
+      if (imgLabelDir) {
+        const promises = [];
+        imgLabelDir.forEach((relativePath, zipEntry) => {
+          if (zipEntry.dir) return;
+          if (!relativePath.toLowerCase().endsWith('.il')) return;
+          promises.push((async () => {
+            try {
+              const text = await zipEntry.async('string');
+              const json = JSON.parse(text);
+              const name = relativePath.replace(/\.[iI][lL]$/, '');
+              await window.ImgSearchDB.saveLabel({
+                name,
+                fileName: name + '.IL',
+                content: text,
+                json,
+                createdAt: Date.now(),
+                updatedAt: Date.now()
+              });
+              imported++;
+            } catch {
+              skipped++;
+            }
+          })());
+        });
+        await Promise.all(promises);
+      }
+
+      // Refresh label list if search console overlay is open
+      if (window.ImgSearchUI && typeof window.ImgSearchUI.refreshLabelList === 'function') {
+        await window.ImgSearchUI.refreshLabelList();
+      }
+
+      const msg = mainEcs
+        ? `已加载 main.ecs${imported > 0 ? '，导入 ' + imported + ' 个标签' : ''}${skipped > 0 ? '，跳过 ' + skipped + ' 个' : ''}`
+        : (imported > 0 ? `导入了 ${imported} 个标签` : 'ZIP 中未找到 main.ecs 或标签');
+      scriptOutput.textContent += '[信息] ' + msg + '\n';
+    } catch (e) {
+      scriptOutput.textContent += '[错误] ZIP 读取失败: ' + e.message + '\n';
+    }
   }
 
   async function onScriptRun() {

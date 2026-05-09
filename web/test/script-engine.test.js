@@ -452,6 +452,52 @@ async function testTC08() {
 }
 
 // ═══════════════════════════════════════════════
+//  TC09 — Label reference (@name) with mock matcher
+// ═══════════════════════════════════════════════
+async function testTC09() {
+  console.log('--- TC09: Label reference (@name) ---');
+
+  // Register mock label matcher
+  window.ScriptEngine.setLabelMatcher(async (name) => {
+    if (name === '测试标签') return 97;
+    if (name === '零标签') return 0;
+    return 50;
+  });
+
+  // Sub-test A: basic assignment and IF with label
+  const srcA = [
+    '$r = @测试标签',
+    'IF $r > 95',
+    '  PRINT 找到目标',
+    'ENDIF',
+    'PRINT 匹配度 & $r',
+  ].join('\n');
+  const outA = await runScript(srcA);
+  assertIncludes(outA, '找到目标',  'TC09a-label-if-true');
+  assertIncludes(outA, '匹配度 97', 'TC09a-label-value');
+
+  // Sub-test B: label returning 0 should not trigger IF
+  const srcB = [
+    '$r = @零标签',
+    'IF $r > 0',
+    '  PRINT 不应出现',
+    'ENDIF',
+    'PRINT 零匹配 & $r',
+  ].join('\n');
+  const outB = await runScript(srcB);
+  assertNotIncludes(outB, '不应出现', 'TC09b-label-zero-if-false');
+  assertIncludes(outB, '零匹配 0', 'TC09b-label-zero-value');
+
+  // Sub-test C: label in arithmetic expression
+  const srcC = [
+    '$r = @测试标签 + 3',
+    'PRINT 运算结果 & $r',
+  ].join('\n');
+  const outC = await runScript(srcC);
+  assertIncludes(outC, '运算结果 100', 'TC09c-label-arithmetic');
+}
+
+// ═══════════════════════════════════════════════
 //  Runner
 // ═══════════════════════════════════════════════
 async function main() {
@@ -465,6 +511,7 @@ async function main() {
   await testTC06();
   await testTC07();
   await testTC08();
+  await testTC09();
 
   console.log(`\n=== Results: ${passed}/${total} passed, ${failed} failed ===`);
   if (failed > 0) process.exit(1);

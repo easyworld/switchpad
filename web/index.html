@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="css/keymapping.css">
   <link rel="stylesheet" href="css/button-overlays.css">
   <link rel="stylesheet" href="css/script-panel.css">
+  <link rel="stylesheet" href="css/img-search.css">
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3/dist/jszip.min.js" defer></script>
 </head>
 <body>
   <div id="app">
@@ -31,10 +33,11 @@
       </div>
       <div class="script-toolbar">
         <button class="btn" id="btn-script-load">加载文件</button>
-        <input type="file" id="script-file-input" accept=".txt,.ecs" style="display:none">
+        <input type="file" id="script-file-input" accept=".txt,.ecs,.zip" style="display:none">
         <button class="btn" id="btn-script-run" style="background:#27ae60">运行</button>
         <button class="btn" id="btn-script-stop" style="background:#c0392b" disabled>停止</button>
         <button class="btn" id="btn-script-clear">清空输出</button>
+        <button class="btn" id="btn-img-search">搜图控制台</button>
       </div>
       <div class="script-output-area">
         <pre id="script-output"></pre>
@@ -113,6 +116,140 @@
     </div>
   </div>
 
+  <!-- Image Search Console Overlay -->
+  <div class="img-search-overlay hidden" id="img-search-overlay">
+    <!-- Top navigation -->
+    <div class="is-nav">
+      <div class="is-nav-left"><span class="is-logo">搜图控制台</span></div>
+      <div class="is-nav-center">
+      </div>
+      <div class="is-nav-right">
+        <button class="is-icon-btn" id="btn-is-close" title="关闭">&#x2715;</button>
+      </div>
+    </div>
+
+    <!-- Three-column body -->
+    <div class="is-body">
+      <!-- Left: Preview -->
+      <div class="is-left" id="is-preview-area">
+        <div class="is-canvas-wrap">
+          <canvas id="is-preview-canvas"></canvas>
+          <canvas id="is-overlay-canvas"></canvas>
+        </div>
+        <div class="is-preview-toolbar">
+          <button class="is-tool-btn" id="btn-is-screenshot">截图</button>
+          <button class="is-tool-btn" id="btn-is-screenshot-history">截图历史</button>
+          <button class="is-tool-btn" id="btn-is-select-range">圈选范围</button>
+          <button class="is-tool-btn" id="btn-is-select-target">圈选目标</button>
+          <button class="is-tool-btn" id="btn-is-search-test">搜索测试</button>
+          <button class="is-tool-btn" id="btn-is-dynamic-test">动态测试</button>
+        </div>
+      </div>
+
+      <!-- Center: Parameters -->
+      <div class="is-center" id="is-params-area">
+        <div class="is-section">
+          <div class="is-section-header" data-toggle="is-section-search">搜索参数 <span class="is-arrow">&#x25BC;</span></div>
+          <div class="is-section-body" id="is-section-search">
+            <label>标签名称</label>
+            <input type="text" id="is-label-name" placeholder="脚本中通过 @名称 调用">
+            <label>搜索方法</label>
+            <select id="is-search-method">
+              <option value="1">标准差匹配</option>
+              <option value="3">标准相关匹配</option>
+              <option value="5" selected>标准相关系数匹配</option>
+            </select>
+            <label>最低更新匹配度 <span id="is-min-update-val">101</span></label>
+            <input type="range" id="is-min-update" min="0" max="101" value="101">
+          </div>
+        </div>
+
+        <div class="is-section">
+          <div class="is-section-header" data-toggle="is-section-pos">位置参数 <span class="is-arrow">&#x25BC;</span></div>
+          <div class="is-section-body" id="is-section-pos">
+            <div class="is-pos-group">
+              <span class="is-pos-label">目标位置</span>
+              <div class="is-pos-row">
+                <label>X</label><input type="number" id="is-tx" value="0" min="0">
+                <label>Y</label><input type="number" id="is-ty" value="0" min="0">
+              </div>
+              <div class="is-pos-row">
+                <label>W</label><input type="number" id="is-tw" value="0" min="1">
+                <label>H</label><input type="number" id="is-th" value="0" min="1">
+              </div>
+              <button class="is-mini-btn" id="btn-is-reset-target">重置</button>
+            </div>
+            <div class="is-pos-group">
+              <span class="is-pos-label">搜索范围</span>
+              <div class="is-pos-row">
+                <label>X</label><input type="number" id="is-rx" value="0" min="0">
+                <label>Y</label><input type="number" id="is-ry" value="0" min="0">
+              </div>
+              <div class="is-pos-row">
+                <label>W</label><input type="number" id="is-rw" value="0" min="1">
+                <label>H</label><input type="number" id="is-rh" value="0" min="1">
+              </div>
+              <button class="is-mini-btn" id="btn-is-reset-range">重置</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="is-section">
+          <div class="is-section-header" data-toggle="is-section-result">测试结果 <span class="is-arrow">&#x25BC;</span></div>
+          <div class="is-section-body" id="is-section-result">
+            <div class="is-thumb-row">
+              <div class="is-thumb-box"><canvas id="is-target-thumb" width="64" height="64"></canvas><span>目标</span></div>
+              <div class="is-thumb-box"><canvas id="is-range-thumb" width="64" height="64"></canvas><span>范围</span></div>
+            </div>
+            <div class="is-result-item">匹配度 <span id="is-match-score">--</span></div>
+            <div class="is-result-item">耗时 <span id="is-match-time">--</span></div>
+            <div class="is-result-item">最大匹配度 <span id="is-max-score">--</span></div>
+          </div>
+        </div>
+
+        <div class="is-bottom-btns">
+          <button class="btn btn-success" id="btn-is-save-label">保存标签</button>
+          <button class="btn" id="btn-is-reset-params">重置参数</button>
+        </div>
+      </div>
+
+      <!-- Right: Label management -->
+      <div class="is-right" id="is-labels-area">
+        <div class="is-label-top">
+          <input type="text" id="is-label-search" placeholder="搜索标签...">
+          <button class="is-tool-btn" id="btn-is-import-label">导入标签文件</button>
+          <input type="file" id="is-import-file-input" accept=".IL,.il" multiple style="display:none">
+          <button class="is-tool-btn" id="btn-is-export-zip">批量导出</button>
+        </div>
+        <div class="is-label-list" id="is-label-list"></div>
+      </div>
+    </div>
+
+    <!-- Bottom status bar -->
+    <div class="is-status" id="is-statusbar">
+      <span class="is-status-item"><span class="is-dot" id="is-conn-dot"></span><span id="is-conn-text">未连接</span></span>
+      <span class="is-status-item" id="is-fps">-- fps</span>
+      <span class="is-status-item" id="is-resolution">--</span>
+      <span class="is-status-item" id="is-search-time">-- ms</span>
+      <span class="is-status-item" id="is-live-score">--</span>
+      <span class="is-status-hint">左键移动，滚轮缩放，右键圈选，双击切换编辑模式</span>
+    </div>
+
+    <!-- Screenshot history slide panel -->
+    <div class="is-screenshot-panel hidden" id="is-screenshot-panel">
+      <div class="is-ss-top">
+        <span id="is-ss-count">共 0 张</span>
+        <button class="is-tool-btn" id="btn-is-ss-export-all">全部导出</button>
+        <button class="is-tool-btn is-tool-btn-danger" id="btn-is-ss-clear">清空全部</button>
+        <button class="is-tool-btn" id="btn-is-ss-close">关闭</button>
+      </div>
+      <div class="is-ss-grid" id="is-ss-grid"></div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="is-toast-container" id="is-toast-container"></div>
+  </div>
+
   <script src="js/protocol.js"></script>
   <script src="js/config.js"></script>
   <script src="js/keymapping.js"></script>
@@ -124,5 +261,8 @@
   <script src="js/keymapping-ui.js"></script>
   <script src="js/script-engine.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/img-search-db.js"></script>
+  <script src="js/img-search-engine.js"></script>
+  <script src="js/img-search-ui.js"></script>
 </body>
 </html>

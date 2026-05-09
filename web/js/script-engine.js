@@ -115,6 +115,16 @@ window.ScriptEngine = (() => {
         continue;
       }
 
+      // Label reference (@name)
+      if (c === '@') {
+        let name = advance();
+        while (pos < source.length && /[a-zA-Z0-9_一-鿿]/.test(ch())) {
+          name += advance();
+        }
+        addToken('LABEL_REF', name);
+        continue;
+      }
+
       // Backslash (for PRINT no-newline)
       if (c === '\\') {
         addToken('BACKSLASH', c);
@@ -304,6 +314,12 @@ window.ScriptEngine = (() => {
       if (tok.type === 'IDENTIFIER' && tok.value.startsWith('_')) {
         advance();
         return { type: 'ConstantRef', name: tok.value };
+      }
+
+      // Label reference (@name)
+      if (tok.type === 'LABEL_REF') {
+        advance();
+        return { type: 'LabelRef', name: tok.value };
       }
 
       // Parenthesized expression
@@ -665,6 +681,11 @@ window.ScriptEngine = (() => {
   let _scopeStack = [];
   let _functions = {};
   let _printNoNewline = false;
+  let _labelMatcher = null;
+
+  function setLabelMatcher(fn) {
+    _labelMatcher = fn;
+  }
 
   function checkAbort() {
     if (_abortController && _abortController.signal.aborted) throw new AbortException();
@@ -735,6 +756,11 @@ window.ScriptEngine = (() => {
       case 'NumberLiteral': return expr.value;
       case 'VariableRef': return getVariable(expr.name);
       case 'ConstantRef': return getConstant(expr.name);
+      case 'LabelRef': {
+        const labelName = expr.name.substring(1);
+        if (_labelMatcher) return await _labelMatcher(labelName);
+        return 0;
+      }
       case 'FunctionCall':
         if (expr.name === 'TIME') return Date.now() - _startTime;
         if (expr.name === 'RAND') {
@@ -787,7 +813,8 @@ window.ScriptEngine = (() => {
   function output(text, newline) {
     if (!_outputCallback) return;
     if (newline === undefined) newline = true;
-    _outputCallback(timeTag() + ' ' + (newline ? text + '\n' : text));
+    const prefix = _printNoNewline ? '' : timeTag() + ' ';
+    _outputCallback(prefix + (newline ? text + '\n' : text));
   }
 
   async function resolvePrintArgs(args) {
@@ -1093,6 +1120,7 @@ window.ScriptEngine = (() => {
     loadScript,
     run,
     stop,
+    setLabelMatcher,
     get isRunning() { return _isRunning; }
   };
 })();
