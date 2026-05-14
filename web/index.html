@@ -13,7 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jszip@3/dist/jszip.min.js" defer></script>
 </head>
 <body>
-  <div id="app">
+  <div id="app" class="script-open">
     <!-- Video Display -->
     <div id="video-container">
       <video id="video-el" autoplay playsinline muted></video>
@@ -22,7 +22,7 @@
     </div>
 
     <!-- Script Panel (right side, spans full height when open) -->
-    <div class="script-panel hidden" id="script-panel">
+    <div class="script-panel" id="script-panel">
       <div class="script-header">
         <h2>脚本引擎</h2>
         <button class="script-close-btn" id="btn-script-close">&times;</button>
@@ -84,11 +84,6 @@
         <div class="status-text" id="wakeup-status"></div>
       </div>
 
-      <!-- Script Engine -->
-      <div class="panel-column">
-        <label>脚本</label>
-        <button class="btn" id="btn-script-panel">脚本编辑器</button>
-      </div>
     </div>
   </div>
 

@@ -1,6 +1,6 @@
 window.AudioService = (() => {
   let _stream = null;
-  let _audioCtx = null;
+  let _audioEl = null;
   let _isRunning = false;
   const _listeners = [];
 
@@ -28,13 +28,14 @@ window.AudioService = (() => {
       _stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           deviceId: deviceId ? { exact: deviceId } : undefined,
-          sampleRate: 48000,
-          channelCount: 2
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: true
         }
       });
-      _audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
-      const source = _audioCtx.createMediaStreamSource(_stream);
-      source.connect(_audioCtx.destination);
+      _audioEl = document.createElement('audio');
+      _audioEl.srcObject = _stream;
+      _audioEl.play();
       _isRunning = true;
       _emit('运行中');
       return true;
@@ -46,13 +47,14 @@ window.AudioService = (() => {
   }
 
   function stopCapture() {
+    if (_audioEl) {
+      _audioEl.pause();
+      _audioEl.srcObject = null;
+      _audioEl = null;
+    }
     if (_stream) {
       _stream.getTracks().forEach(t => t.stop());
       _stream = null;
-    }
-    if (_audioCtx) {
-      _audioCtx.close().catch(() => {});
-      _audioCtx = null;
     }
     _isRunning = false;
     _emit('未启动');

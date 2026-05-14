@@ -19,7 +19,6 @@ window.UI = (() => {
   const btnWakeup = $('btn-wakeup');
   const wakeupStatus = $('wakeup-status');
   const btnFullscreen = $('btn-fullscreen');
-  const btnScriptPanel = $('btn-script-panel');
   const btnScriptClose = $('btn-script-close');
   const btnScriptLoad = $('btn-script-load');
   const btnScriptRun = $('btn-script-run');
@@ -51,7 +50,6 @@ window.UI = (() => {
     btnReload.addEventListener('click', onReloadClick);
     btnWakeup.addEventListener('click', onWakeupClick);
     btnFullscreen.addEventListener('click', toggleFullscreen);
-    btnScriptPanel.addEventListener('click', openScriptPanel);
     btnScriptClose.addEventListener('click', closeScriptPanel);
     btnScriptLoad.addEventListener('click', () => scriptFileInput.click());
     scriptFileInput.addEventListener('change', onScriptFileLoad);
