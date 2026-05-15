@@ -17,20 +17,20 @@
     <!-- Video Display -->
     <div id="video-container">
       <video id="video-el" autoplay playsinline muted></video>
-      <div id="serial-hint">点击下方「连接串口」开始</div>
+      <div id="serial-hint">点击「连接串口」开始</div>
       <button class="fullscreen-toggle" id="btn-fullscreen" title="全屏">&#x26F6;</button>
     </div>
 
     <!-- Script Panel (right side, spans full height when open) -->
     <div class="script-panel" id="script-panel">
       <div class="script-header">
-        <h2>脚本引擎</h2>
-        <button class="script-close-btn" id="btn-script-close">&times;</button>
+        <h2>脚本引擎 <button class="script-guide-icon" id="btn-script-guide" title="脚本指南">?</button></h2>
       </div>
-      <div class="script-editor-area">
+      <div class="script-editor-area" id="script-editor-area">
         <textarea id="script-editor" spellcheck="false"
           placeholder="# Enter your script here&#10;PRINT Hello World&#10;WAIT 1000&#10;A&#10;"></textarea>
       </div>
+      <div class="script-resizer" id="script-resizer"></div>
       <div class="script-toolbar">
         <button class="btn" id="btn-script-load">加载文件</button>
         <input type="file" id="script-file-input" accept=".txt,.ecs,.zip" style="display:none">
@@ -50,7 +50,6 @@
       <div class="panel-column">
         <label>串口设备</label>
         <button class="btn" id="btn-serial-connect">连接串口</button>
-        <div class="status-text status-err" id="serial-status">未连接</div>
       </div>
 
       <!-- Video Source -->
@@ -58,7 +57,6 @@
         <label>视频采集源</label>
         <select id="sel-video-source"><option value="">-- 选择设备 --</option></select>
         <button class="btn" id="btn-video-start">切换采集源</button>
-        <div class="status-text status-err" id="video-status">未连接</div>
       </div>
 
       <!-- Audio Device -->
@@ -66,7 +64,6 @@
         <label>音频设备</label>
         <select id="sel-audio-device"><option value="">-- 选择设备 --</option></select>
         <button class="btn" id="btn-audio-start">启动音频</button>
-        <div class="status-text status-err" id="audio-status">未启动</div>
       </div>
 
       <!-- Key Mapping -->
@@ -78,12 +75,19 @@
 
       <!-- NS2 Wakeup -->
       <div class="panel-column">
-        <label>设备唤醒</label>
+        <label>设备唤醒 <button class="help-icon" id="btn-wakeup-help" title="设备唤醒说明">?</button></label>
         <input type="text" id="input-cidr" placeholder="例如：192.168.3.0/24">
         <button class="btn" id="btn-wakeup">唤醒 NS2</button>
-        <div class="status-text" id="wakeup-status"></div>
       </div>
+    </div>
 
+    <!-- Homepage Status Bar -->
+    <div class="home-status" id="home-statusbar">
+      <span class="is-status-item"><span class="is-dot" id="home-serial-dot"></span><span id="home-serial-text">串口 未连接</span></span>
+      <span class="is-status-item"><span class="is-dot" id="home-video-dot"></span><span id="home-video-text">视频 未连接</span></span>
+      <span class="is-status-item"><span class="is-dot" id="home-audio-dot"></span><span id="home-audio-text">音频 未启动</span></span>
+      <span class="is-status-item" id="home-wakeup-text"></span>
+      <span class="is-status-hint">按 Enter 切换全屏</span>
     </div>
   </div>
 
@@ -243,6 +247,47 @@
 
     <!-- Toast container -->
     <div class="is-toast-container" id="is-toast-container"></div>
+  </div>
+
+  <!-- Script Guide Modal -->
+  <div class="guide-overlay hidden" id="guide-overlay">
+    <div class="guide-dialog">
+      <div class="guide-header">
+        <span class="guide-title">脚本指南</span>
+        <button class="guide-close-btn" id="btn-guide-close">&times;</button>
+      </div>
+      <div class="guide-body">
+        <pre id="guide-content"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wakeup Help Modal -->
+  <div class="guide-overlay hidden" id="wakeup-help-overlay">
+    <div class="guide-dialog">
+      <div class="guide-header">
+        <span class="guide-title">设备唤醒说明</span>
+        <button class="guide-close-btn" id="btn-wakeup-help-close">&times;</button>
+      </div>
+      <div class="guide-body">
+        <h3>NS2 设备唤醒原理</h3>
+        <p>向局域网内 NS2 发送唤醒请求，使其从休眠状态恢复。</p>
+        <ul>
+          <li><strong>扫描范围：</strong>根据输入的 CIDR（如 192.168.3.0/24）扫描 IP 范围</li>
+          <li><strong>扫描方式：</strong>并发向每个 IP 发送 <code>GET /switch2/wakeup</code></li>
+          <li><strong>超时时间：</strong>500ms，快速跳过离线设备</li>
+          <li><strong>显示结果：</strong>所有有 HTTP 响应的在线设备及状态码</li>
+        </ul>
+        <h4>使用步骤</h4>
+        <ol>
+          <li>输入 NS2 所在网段，如 <code>192.168.3.0/24</code></li>
+          <li>点击「唤醒 NS2」按钮</li>
+          <li>等待扫描完成，查看状态栏结果</li>
+        </ol>
+        <p><strong>注意：</strong>NS2 必须处于休眠状态而非关机，且与电脑在同一局域网。</p>
+        <p><strong>硬件要求：</strong>使用此功能需要有 ESP32-C3 单片机和定制固件（见项目 esp32-c3-firmware 文件夹里的 ESP32C3_BLE_HTTP.ino）。</p>
+      </div>
+    </div>
   </div>
 
   <script src="js/protocol.js"></script>

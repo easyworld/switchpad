@@ -29,7 +29,7 @@ html, body {
 
 #app {
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: 1fr auto auto;
   width: 100%; height: 100%;
 }
 
@@ -62,9 +62,6 @@ html, body {
   user-select: none;
 }
 
-.fullscreen #control-panel { display: none; }
-.fullscreen #video-container { margin: 0; border-radius: 0; }
-
 #app.script-open {
   grid-template-columns: 1fr 30%;
 }
@@ -78,6 +75,16 @@ html, body {
 #app.script-open #control-panel {
   grid-column: 1 / -1;
 }
+
+#app.script-open #home-statusbar {
+  grid-column: 1 / -1;
+}
+
+#app.fullscreen #control-panel { display: none; }
+#app.fullscreen .home-status { display: none; }
+#app.fullscreen #script-panel { display: none !important; }
+#app.fullscreen #video-container { margin: 0; border-radius: 0; }
+#app.fullscreen { grid-template-columns: 1fr; }
 
 select, input[type="text"] {
   width: 100%;
@@ -130,12 +137,29 @@ select:focus, input[type="text"]:focus {
 .btn-success { background: var(--accent-green); border-color: var(--accent-green); }
 .btn-success:hover { background: #2ecc71; }
 
-.status-text {
+/* ── Homepage Status Bar ── */
+
+.home-status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  height: 28px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
   font-size: 12px;
-  margin-top: 4px;
-  transition: color var(--transition-fast);
+  color: var(--text-secondary);
+  margin: 0 8px 8px;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  white-space: nowrap;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
-.status-ok { color: var(--accent-green); }
-.status-err { color: var(--accent-red); }
-.status-warn { color: var(--accent-yellow); }
+.home-status .is-status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

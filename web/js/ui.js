@@ -6,25 +6,31 @@ window.UI = (() => {
   const videoEl = $('video-el');
   const serialHint = $('serial-hint');
   const btnSerial = $('btn-serial-connect');
-  const serialStatus = $('serial-status');
   const selVideo = $('sel-video-source');
   const btnVideo = $('btn-video-start');
-  const videoStatus = $('video-status');
   const selAudio = $('sel-audio-device');
   const btnAudio = $('btn-audio-start');
-  const audioStatus = $('audio-status');
   const btnKeymapping = $('btn-keymapping');
   const btnReload = $('btn-reload-config');
   const inputCidr = $('input-cidr');
   const btnWakeup = $('btn-wakeup');
-  const wakeupStatus = $('wakeup-status');
+  const btnWakeupHelp = $('btn-wakeup-help');
   const btnFullscreen = $('btn-fullscreen');
-  const btnScriptClose = $('btn-script-close');
+  const btnWakeupHelpClose = $('btn-wakeup-help-close');
   const btnScriptLoad = $('btn-script-load');
   const btnScriptRun = $('btn-script-run');
   const btnScriptStop = $('btn-script-stop');
   const btnScriptClear = $('btn-script-clear');
+  const btnGuideClose = $('btn-guide-close');
+  const btnScriptGuide = $('btn-script-guide');
   const scriptFileInput = $('script-file-input');
+  const homeSerialDot = $('home-serial-dot');
+  const homeSerialText = $('home-serial-text');
+  const homeVideoDot = $('home-video-dot');
+  const homeVideoText = $('home-video-text');
+  const homeAudioDot = $('home-audio-dot');
+  const homeAudioText = $('home-audio-text');
+  const homeWakeupText = $('home-wakeup-text');
   const scriptEditor = $('script-editor');
   const scriptOutput = $('script-output');
 
@@ -50,12 +56,22 @@ window.UI = (() => {
     btnReload.addEventListener('click', onReloadClick);
     btnWakeup.addEventListener('click', onWakeupClick);
     btnFullscreen.addEventListener('click', toggleFullscreen);
-    btnScriptClose.addEventListener('click', closeScriptPanel);
     btnScriptLoad.addEventListener('click', () => scriptFileInput.click());
     scriptFileInput.addEventListener('change', onScriptFileLoad);
     btnScriptRun.addEventListener('click', onScriptRun);
     btnScriptStop.addEventListener('click', onScriptStop);
     btnScriptClear.addEventListener('click', () => { scriptOutput.textContent = ''; });
+    btnScriptGuide.addEventListener('click', (e) => { e.stopPropagation(); openScriptGuide(); });
+    btnGuideClose.addEventListener('click', () => $('guide-overlay').classList.add('hidden'));
+    $('guide-overlay').addEventListener('click', (e) => { if (e.target === $('guide-overlay')) $('guide-overlay').classList.add('hidden'); });
+
+    // Wakeup help modal
+    btnWakeupHelp.addEventListener('click', (e) => { e.stopPropagation(); $('wakeup-help-overlay').classList.remove('hidden'); });
+    btnWakeupHelpClose.addEventListener('click', () => $('wakeup-help-overlay').classList.add('hidden'));
+    $('wakeup-help-overlay').addEventListener('click', (e) => { if (e.target === $('wakeup-help-overlay')) $('wakeup-help-overlay').classList.add('hidden'); });
+
+    // Script panel resizer
+    initResizer();
 
     // Keyboard events
     document.addEventListener('keydown', onKeyDown);
@@ -129,20 +145,23 @@ window.UI = (() => {
   // ── Status handlers ──
 
   function onSerialStatus(status) {
-    serialStatus.textContent = status;
-    serialStatus.className = 'status-text ' + (status.includes('已连接') ? 'status-ok' : 'status-err');
-    btnSerial.textContent = status.includes('已连接') ? '断开串口' : '连接串口';
-    serialHint.style.display = status.includes('已连接') ? 'none' : '';
+    const ok = status.includes('已连接');
+    homeSerialDot.className = 'is-dot' + (ok ? ' connected' : '');
+    homeSerialText.textContent = '串口 ' + status;
+    btnSerial.textContent = ok ? '断开串口' : '连接串口';
+    serialHint.style.display = ok ? 'none' : '';
   }
 
   function onVideoStatus(status) {
-    videoStatus.textContent = status;
-    videoStatus.className = 'status-text ' + (status.includes('运行中') ? 'status-ok' : 'status-err');
+    const ok = status.includes('运行中');
+    homeVideoDot.className = 'is-dot' + (ok ? ' connected' : '');
+    homeVideoText.textContent = '视频 ' + status;
   }
 
   function onAudioStatus(status) {
-    audioStatus.textContent = status;
-    audioStatus.className = 'status-text ' + (status.includes('运行中') ? 'status-ok' : 'status-err');
+    const ok = status.includes('运行中');
+    homeAudioDot.className = 'is-dot' + (ok ? ' connected' : '');
+    homeAudioText.textContent = '音频 ' + status;
   }
 
   // ── Button handlers ──
@@ -196,8 +215,8 @@ window.UI = (() => {
   async function onWakeupClick() {
     const cidr = inputCidr.value.trim();
     if (!cidr) {
-      wakeupStatus.textContent = '请输入扫描范围';
-      wakeupStatus.className = 'status-text status-warn';
+      homeWakeupText.textContent = '请输入扫描范围';
+      homeWakeupText.style.color = 'var(--accent-yellow)';
       return;
     }
 
@@ -205,8 +224,8 @@ window.UI = (() => {
     try {
       ips = window.WakeupService.expandCidr(cidr);
     } catch {
-      wakeupStatus.textContent = 'CIDR 格式无效';
-      wakeupStatus.className = 'status-text status-warn';
+      homeWakeupText.textContent = 'CIDR 格式无效';
+      homeWakeupText.style.color = 'var(--accent-yellow)';
       return;
     }
 
@@ -216,17 +235,17 @@ window.UI = (() => {
 
     btnWakeup.disabled = true;
     btnWakeup.textContent = '扫描中...';
-    wakeupStatus.textContent = `正在扫描 ${cidr}...`;
-    wakeupStatus.className = 'status-text status-warn';
+    homeWakeupText.textContent = `正在扫描 ${cidr}...`;
+    homeWakeupText.style.color = 'var(--accent-yellow)';
 
     const found = await window.WakeupService.scanForNS2(ips);
 
     if (found.length > 0) {
-      wakeupStatus.textContent = `已唤醒 ${found.length} 台设备`;
-      wakeupStatus.className = 'status-text status-ok';
+      homeWakeupText.textContent = `唤醒 ${found.length} 台设备`;
+      homeWakeupText.style.color = 'var(--accent-green)';
     } else {
-      wakeupStatus.textContent = '未发现在线设备';
-      wakeupStatus.className = 'status-text status-err';
+      homeWakeupText.textContent = '未发现设备';
+      homeWakeupText.style.color = 'var(--accent-red)';
     }
 
     btnWakeup.disabled = false;
@@ -419,6 +438,59 @@ window.UI = (() => {
 
   function onScriptStop() {
     window.ScriptEngine.stop();
+  }
+
+  function openScriptGuide() {
+    const pre = $('guide-content');
+    if (!pre.textContent.trim()) {
+      fetch('脚本指南.txt').then(r => r.text()).then(text => {
+        pre.textContent = text;
+        $('guide-overlay').classList.remove('hidden');
+      }).catch(() => {
+        pre.textContent = '无法加载脚本指南文件';
+        $('guide-overlay').classList.remove('hidden');
+      });
+    } else {
+      $('guide-overlay').classList.remove('hidden');
+    }
+  }
+
+  function initResizer() {
+    const resizer = $('script-resizer');
+    const editorArea = $('script-editor-area');
+    const outputArea = document.querySelector('.script-output-area');
+    let startY, startEditorH, startOutputH;
+
+    resizer.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startY = e.clientY;
+      startEditorH = editorArea.getBoundingClientRect().height;
+      startOutputH = outputArea.getBoundingClientRect().height;
+      resizer.classList.add('active');
+      document.addEventListener('mousemove', onDrag);
+      document.addEventListener('mouseup', onDragEnd);
+      document.body.style.cursor = 'ns-resize';
+      document.body.style.userSelect = 'none';
+    });
+
+    function onDrag(e) {
+      const dy = e.clientY - startY;
+      const newEH = Math.max(60, startEditorH + dy);
+      const newOH = Math.max(60, startOutputH - dy);
+      editorArea.style.flex = 'none';
+      editorArea.style.height = newEH + 'px';
+      outputArea.style.flex = 'none';
+      outputArea.style.height = newOH + 'px';
+    }
+
+    function onDragEnd() {
+      resizer.classList.remove('active');
+      document.removeEventListener('mousemove', onDrag);
+      document.removeEventListener('mouseup', onDragEnd);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
   }
 
   // ── Cleanup ──

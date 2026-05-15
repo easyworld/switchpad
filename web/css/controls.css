@@ -42,3 +42,31 @@
 .fullscreen-toggle:hover { background: rgba(0,0,0,0.8); }
 
 .fullscreen .fullscreen-toggle { top: 8px; right: 8px; }
+
+.panel-column label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.help-icon {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--text-dim);
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: var(--font-ui);
+}
+
+.help-icon:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
