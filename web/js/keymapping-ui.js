@@ -227,14 +227,21 @@ window.KeyMappingUI = (() => {
     // Skip modifier-only keys
     if (['ControlLeft','ControlRight','AltLeft','AltRight','ShiftLeft','ShiftRight','MetaLeft','MetaRight'].includes(e.code)) return;
 
-    // If this key was already mapped, remove that old mapping
+    // If this key was already mapped to another button, remove that old mapping
     if (_tempMappings[e.code] !== undefined && _tempMappings[e.code] !== BTN[_currentEditing]) {
       const oldBtnTag = Object.entries(BTN).find(([, v]) => v === _tempMappings[e.code])?.[0];
       delete _tempMappings[e.code];
       if (oldBtnTag) updateButtonDisplay(oldBtnTag);
     }
 
-    _tempMappings[e.code] = BTN[_currentEditing];
+    // If current button was already mapped to another key, remove that old mapping
+    const btnVal = BTN[_currentEditing];
+    const oldCode = Object.entries(_tempMappings).find(([, v]) => v === btnVal)?.[0];
+    if (oldCode && oldCode !== e.code) {
+      delete _tempMappings[oldCode];
+    }
+
+    _tempMappings[e.code] = btnVal;
 
     const info = document.getElementById('km-info');
     const detail = document.getElementById('km-detail');

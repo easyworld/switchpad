@@ -10,9 +10,7 @@ window.ConfigService = (() => {
       'KeyH': 'Home', 'KeyP': 'Capture',
       'KeyF': 'LStick', 'KeyG': 'RStick',
       'ArrowUp': 'LStickUp', 'ArrowDown': 'LStickDown',
-      'ArrowLeft': 'LStickLeft', 'ArrowRight': 'LStickRight',
-      'KeyI': 'RStickUp', 'KeyK': 'RStickDown',
-      'KeyJ': 'RStickLeft', 'KeyL': 'RStickRight'
+      'ArrowLeft': 'LStickLeft', 'ArrowRight': 'LStickRight'
     };
   }
 
